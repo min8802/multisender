@@ -33,7 +33,7 @@ import {
           w="170px"
           _hover={{ bgColor: "teal.400" }}
         >
-          <Text className="styled-text" fontWeight="bold">
+          <Text className="styled-text" fontWeight="bold" color="white">
             {text}
           </Text>
         </MenuButton>
@@ -43,6 +43,7 @@ import {
               key={i}
               onClick={v === "로그아웃" ? onClickMetamaskLogout : undefined}
               bgColor="gray.700"
+              color="white"
             >
               {v === "마이페이지" ? (
                 <Text className="styled-text" fontWeight="bold">

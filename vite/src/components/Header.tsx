@@ -3,6 +3,7 @@ import { Dispatch, FC, SetStateAction, useEffect } from "react";
 import { JsonRpcSigner, ethers } from "ethers";
 import { useNavigate } from "react-router-dom";
 import HeaderMenu from "./HeaderMenu";
+import Navbar from "./Navbar";
 
 
 
@@ -52,26 +53,28 @@ const Header: FC<HeaderProps> = ({ signer, setSigner }) => {
       justifyContent="space-between"
       alignItems="center"
       fontWeight="bold"
-      bgColor="gray.800"
       borderBottomColor="white"
       borderBottomWidth="2px"
       px={4}
       zIndex={2}
+      bgColor="gray.800"
     >
-      <Flex gap={2} position="relative">
+      <Flex gap={24} position="relative">
         <Button
-          bgColor="backgroundColor"
+          variant="ghost"
           w={220}
           fontSize="20px"
           textAlign="center"
           alignSelf="center"
+          color="white"
           fontWeight="bold"
-          _hover={{ bgColor: "backgroundColor" }}
+          _hover={{ transform: "scale(1.05)" }}
+          _active={{ transform: "scale(0.95)" }}
           onClick={() => navigator("/")}
         >
-          토큰 다중 전송
+          Unideca
         </Button>
-        
+        <Navbar/>
       </Flex>
       <Flex>
         {signer ? (
