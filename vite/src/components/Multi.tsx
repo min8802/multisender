@@ -9,10 +9,10 @@ import { useOutletContext } from "react-router-dom";
 import { OutletContext } from "../components/Layout";
 import { Contract } from "ethers";
 import { ethers } from "ethers";
+import tokenBatchMultiContractAbi from "../lib/tokenBatchMultiContractAbi.json"
 import tokenMultiContractAbi from "../lib/tokenMultiContractAbi.json";
 import useToastNotification from "../hooks/useToastNotification";
-import { BSCtokenMultisenderCA } from "../lib/contractAddresses";
-import { ArbitrumtokenMultisenderCA } from "../lib/contractAddresses";
+import { BSCtokenMultisenderCA, SepoliaMultisenderCA, ArbitrumtokenMultisenderCA  } from "../lib/contractAddresses";
 import erc20Approve from "../lib/erc20Approve.json";
 import NetworkSelector from "./NetworkSelector";
 
@@ -24,6 +24,7 @@ const networkOptions = [
   {name : "Optimism", value : "0xa"},
   {name : "Base", value : "0x2105"},
   {name : "Fantom", value : "0xfa"},
+  {name : "Sepolia", value : "0xaa36a7"},
 ];
 
 const Multi: FC = () => {
@@ -52,19 +53,6 @@ const Multi: FC = () => {
   const inputChange = (e: any) => {
     setInputValue(e.target.value);
   };
-  
-  // 네트워크가 변경될 때마다 자동으로 처리
-  //window.ethereum.on('chainChanged', ...) 이벤트에서 전달되는 인자는 chainId 하나뿐임
-  window.ethereum.on('chainChanged', async (chainId : string) => {
-      console.log("Network changed to:", chainId);
-      const provider = new ethers.BrowserProvider(window.ethereum); // 메타마스크 프로바이더 설정
-      const signer = provider.getSigner(); // 새로 변경된 네트워크에 맞는 signer 가져오기
-      console.log("New Signer for the network:", signer);
-      setNewSigner(); //새로 변경된 네트워크의 signer를 setSigner함수로 signer변수에 할당 async작업 이루어져야 해서 함수 따로 뺌
-      setTokenAmount(0n); //프론트 단이 아닌 지갑 상에서 네트워크 변경 시켰을 때 전송 페이지 최소화
-      switchToNetwork(chainId); // switchToNetwork의 파라미터 인자를 chainId로 모두 교환함
-      setNetwork(chainId); // 현재 network 변수를 변경하여 <select> 컴포넌트의 네트워크 value 변경
-  });
 
   //네트워크 변경 시 새로운 Signer 호출 , signer가 변경되어야 해당 네트워크에서 함수들 호출 가능
   const setNewSigner = async () => {
@@ -97,6 +85,9 @@ const Multi: FC = () => {
       } else if(selectedNetwork === "0xfa") {
         console.log(selectedNetwork);
         //setMultiContract(new Contract(BSCtokenMultisenderCA, tokenMultiContractAbi, signer));
+      } else if(selectedNetwork === "0xaa36a7") {
+        console.log(selectedNetwork);
+        setMultiContract(new Contract(SepoliaMultisenderCA, tokenBatchMultiContractAbi, signer));
       } 
 
     } catch (error) {
@@ -186,6 +177,19 @@ const Multi: FC = () => {
         const provider = new ethers.BrowserProvider(window.ethereum);
         setSigner(await provider.getSigner());
         switchToNetwork("0x2105");
+     
+      } else if(selectedNetwork === "0xaa36a7") {
+        const sepoliaChainId = "0xaa36a7"; // Arbitrum One Chain ID (42161 in decimal)
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: sepoliaChainId }],
+          });
+        setNetwork(selectedNetwork);
+        setTokenAmount(0n);
+        setTokenName("");
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        setSigner(await provider.getSigner());
+        switchToNetwork("0xaa36a7");
      
       } else if (selectedNetwork === "0xfa") {
         const fantomChainId = "0xfa"; // Fantom Chain ID (250 in decimal)
@@ -362,7 +366,10 @@ const Multi: FC = () => {
     if (!multiContract) return;
     setIsLoading(true);
 
+    const batchSize = 100;
+
     try {
+      if(addresses.length > 100) {
       // const tx = await multiContract.multisender(addresses, amounts, {
       //   value: totalValue + lines.length * 10 ** 14,
       // });
@@ -374,22 +381,51 @@ const Multi: FC = () => {
         const approveAmount = await tokenContract.approve(multiContract, totalValue);
         await approveAmount.wait();
       }
+
+      for(let i = 0; i < addresses.length; i += batchSize) {
+        const batchAddresses = addresses.slice(i, i + batchSize);
+        const batchAmounts = amounts.slice(i, i + batchSize);
+        const tx = await multiContract.multisendToken2(tokenContract, batchAddresses, batchAmounts);
+        showToast(
+          `배치 ${Math.floor(i / batchSize) + 1} 실행 중`,
+          "트랜잭션이 진행 중입니다. 잠시만 기다려주세요.",
+          "info"
+        );
+        await tx.wait();
+        showToast(
+          `배치 ${Math.floor(i / batchSize) + 1} 완료`,
+          "해당 배치의 전송이 성공적으로 완료되었습니다.",
+          "success"
+        );
+      }} else {
+        // const tx = await multiContract.multisender(addresses, amounts, {
+        //   value: totalValue + lines.length * 10 ** 14,
+        // });
+        console.log(totalValue);
+        if(!tokenContract) return;
+        const allowance = await tokenContract.allowance(signer.address, multiContract);
+        console.log(allowance);
+        if(allowance < totalValue) {
+          const approveAmount = await tokenContract.approve(multiContract, totalValue);
+          await approveAmount.wait();
+        }
+        const tx = await multiContract.multisendToken2(tokenContract, addresses, amounts);
+        showToast(
+          "토큰 전송 중",
+          "토큰을 전송하고 있습니다. 잠시만 기다려주세요.",
+          "info"
+        );
+        await tx.wait();
+
+        showToast(
+          "전송 완료!",
+          "토큰 전송이 성공적으로 완료되었습니다.",
+          "success"
+        );
+      }
       
-      const tx = await multiContract.multisendToken2(tokenContract, addresses, amounts);
-      showToast(
-        "토큰 전송 중",
-        "토큰을 전송하고 있습니다. 잠시만 기다려주세요.",
-        "info"
-      );
-      await tx.wait();
+      
 
-      showToast(
-        "전송 완료!",
-        "토큰 전송이 성공적으로 완료되었습니다.",
-        "success"
-      );
-
-      // await addPoints(signer, 10 * lines.length);
     } catch (error) {
       console.log(error);
       showToast("전송 실패", "토큰 전송 중 오류가 발생했습니다.", "error");
@@ -487,6 +523,26 @@ const Multi: FC = () => {
       }
     };
   };
+
+  // 네트워크가 변경될 때마다 자동으로 처리
+  //window.ethereum.on('chainChanged', ...) 이벤트에서 전달되는 인자는 chainId 하나뿐임
+  
+
+  useEffect(() => {
+    const ethereum = window.ethereum;
+    if (ethereum) {
+      window.ethereum.on('chainChanged', async (chainId : string) => {
+        console.log("Network changed to:", chainId);
+        const provider = new ethers.BrowserProvider(window.ethereum); // 메타마스크 프로바이더 설정
+        const signer = provider.getSigner(); // 새로 변경된 네트워크에 맞는 signer 가져오기
+        console.log("New Signer for the network:", signer);
+        setNewSigner(); //새로 변경된 네트워크의 signer를 setSigner함수로 signer변수에 할당 async작업 이루어져야 해서 함수 따로 뺌
+        setTokenAmount(0n); //프론트 단이 아닌 지갑 상에서 네트워크 변경 시켰을 때 전송 페이지 최소화
+        switchToNetwork(chainId); // switchToNetwork의 파라미터 인자를 chainId로 모두 교환함
+        setNetwork(chainId); // 현재 network 변수를 변경하여 <select> 컴포넌트의 네트워크 value 변경
+      });
+    }
+  },[])
 
   useEffect(() => {
     getNetwork();

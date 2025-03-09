@@ -30,6 +30,7 @@ const NetworkSelector : FC<NetworkSelectorProps> = ({network, networkHandler, is
               <option value="0xfa">Fantom</option>
               <option value="0xa">Optimism</option>
               <option value="0x89">Polygon</option>
+              <option value="0xaa36a7">Sepolia</option>
               <option value="none">지원하지 않는 네트워크</option>
             </Select>
     )
