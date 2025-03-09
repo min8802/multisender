@@ -52,7 +52,7 @@ const Home : FC = () => {
                     </Flex>
                 </Box>
                 <Button
-                    p={0}
+                    p={4}
                     bgColor="teal"
                     w="250px"
                     position="absolute"
