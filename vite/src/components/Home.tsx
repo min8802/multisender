@@ -54,10 +54,13 @@ const Home : FC = () => {
                 <Button
                     p={0}
                     bgColor="teal"
-                    w="170px"
-                        _hover={{ bg: "teal.400", transform: "scale(1.05)" }}
-                        _active={{ bg: "teal.300", transform: "scale(0.95)" }}
-                        onClick={() => {navigator("/multi")}}
+                    w="250px"
+                    position="absolute"
+                    left={12}
+                    mb={4}
+                    _hover={{ bg: "teal.400", transform: "scale(1.05)" }}
+                    _active={{ bg: "teal.300", transform: "scale(0.95)" }}
+                    onClick={() => {navigator("/multi")}}
                 >
                     <Text 
                         color="white"
