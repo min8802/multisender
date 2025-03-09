@@ -74,7 +74,7 @@ const Header: FC<HeaderProps> = ({ signer, setSigner }) => {
           _active={{ transform: "scale(0.95)" }}
           onClick={() => navigator("/")}
         >
-          Unideca
+          Sendy
         </Button>
         <Navbar/>
       </Flex>

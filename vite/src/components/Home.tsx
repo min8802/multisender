@@ -1,9 +1,8 @@
-import { Box, Button, Divider, Flex, Image, Text } from "@chakra-ui/react";
-import { FC, useState } from "react";
+import { Box, Button, Divider, Flex, Text } from "@chakra-ui/react";
+import { FC } from "react";
 import { useNavigate } from "react-router";
 
 const Home : FC = () => {
-    const [imageSrc, setImageSrc] = useState("/token_create.webp");
     const navigator = useNavigate();
 
     return (
@@ -52,30 +51,19 @@ const Home : FC = () => {
                     </Text>
                     </Flex>
                 </Box>
-
                 <Button
-                    background="none"
                     p={0}
-                    _hover={{ transform: "scale(1.05)" }}
-                    _active={{ transform: "scale(0.95)" }}
-                    onMouseOver={() => setImageSrc("../token_create2.webp")}
-                    onMouseOut={() => setImageSrc("../token_create.webp")}
-                    position="absolute"
-                    left={12}
-                    mb={4}
-                    onClick={() => {navigator("/multi")}}
+                    bgColor="teal"
+                    w="170px"
+                        _hover={{ bg: "teal.400", transform: "scale(1.05)" }}
+                        _active={{ bg: "teal.300", transform: "scale(0.95)" }}
+                        onClick={() => {navigator("/multi")}}
                 >
-                    <Image
-                    src={imageSrc}
-                    alt="token_create"
-                    w="250px"
-                    position="relative"
-                    />
-                    <Text
-                    color="white"
-                    position="absolute"
-                    fontSize="30px"
-                    fontWeight="bold"
+                    <Text 
+                        color="white"
+                        position="absolute"
+                        fontSize="30px"
+                        fontWeight="bold"
                     >
                     토큰 전송
                     </Text>
